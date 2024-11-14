@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Healthcare Service Management</title>
+  </head>
+  <body>
+    <h1>Healthcare Service Management</h1>
+
+    <!-- Form to add a new service -->
+    <h2>Add a New Service</h2>
+    <form id="addServiceForm">
+      <input type="text" id="serviceName" placeholder="Service Name" required />
+      <input
+        type="text"
+        id="serviceDescription"
+        placeholder="Service Description"
+        required
+      />
+      <input
+        type="number"
+        id="servicePrice"
+        placeholder="Service Price"
+        required
+      />
+      <button type="submit">Add Service</button>
+    </form>
+
+    <!-- Button to fetch all services -->
+    <h2>Available Services</h2>
+    <button onclick="getAllServices()">Get All Services</button>
+    <ul id="servicesList"></ul>
+
+    <script>
+      // Add a new service
+      document
+        .getElementById("addServiceForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("serviceName").value;
+          const description =
+            document.getElementById("serviceDescription").value;
+          const price = document.getElementById("servicePrice").value;
+
+          const response = await fetch("/api/services", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, description, price }),
+          });
+          const result = await response.json();
+          alert(result.error || "Service added successfully");
+          getAllServices(); // Refresh the services list
+        });
+
+      // Get all services
+      async function getAllServices() {
+        const response = await fetch("/api/services");
+        const services = await response.json();
+        const servicesList = document.getElementById("servicesList");
+        servicesList.innerHTML = "";
+
+        services.forEach((service) => {
+          const serviceItem = document.createElement("li");
+          serviceItem.innerHTML = `
+          <strong>${service.name}</strong> - ${service.description} ($${service.price})
+          <button onclick="deleteService('${service._id}')">Delete</button>
+          <button onclick="updateService('${service._id}')">Update</button>
+        `;
+          servicesList.appendChild(serviceItem);
+        });
+      }
+
+      // Delete a service
+      async function deleteService(id) {
+        await fetch(`/api/services/${id}`, { method: "DELETE" });
+        alert("Service deleted successfully");
+        getAllServices();
+      }
+
+      // Update a service
+      async function updateService(id) {
+        const name = prompt("Enter new name");
+        const description = prompt("Enter new description");
+        const price = prompt("Enter new price");
+
+        const response = await fetch(`/api/services/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, description, price }),
+        });
+        const result = await response.json();
+        alert(result.error || "Service updated successfully");
+        getAllServices();
+      }
+    </script>
+  </body>
+</html>
